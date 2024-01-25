@@ -1,0 +1,97 @@
+select * 
+from ocd_patient_dataset
+
+--standardizing date
+Select OCD_Diagnosis_Date, CONVERT(Date,OCD_Diagnosis_Date) as New_Diagnosis_Date
+From ocd_patient_dataset
+
+Update ocd_patient_dataset
+SET OCD_Diagnosis_Date = CONVERT(Date,OCD_Diagnosis_Date)
+
+ALTER TABLE ocd_patient_dataset
+Add New_Diagnosis_Date Date;
+
+Update ocd_patient_dataset
+SET New_Diagnosis_Date = CONVERT(Date,OCD_Diagnosis_Date)
+
+--finding the total number of patients 
+
+select
+count (Patient_ID) as Total_Number_of_Patients
+from ocd_patient_dataset
+
+--total of males and females 
+SELECT
+  Gender,
+  COUNT(*) as Total,
+  ROUND((COUNT(*) * 100.0 / SUM(COUNT(*)) OVER ()), 1) as Percentage
+FROM ocd_patient_dataset
+GROUP BY Gender;
+
+--average Y-BOCS Score (Obsessions) and average Y-BOCS Score (Compulsions) with respect to gender 
+SELECT
+  Gender,
+  AVG(Y_BOCS_Score_Obsessions)as avg_obs_score,
+  AVG(Y_BOCS_Score_Compulsions) as avg_com_score
+FROM ocd_patient_dataset
+GROUP BY Gender;
+
+
+--total of each ethinicity and average obssesion and compulsion score 
+SELECT
+  Ethnicity,
+  COUNT(*) as Total,
+  AVG(Y_BOCS_Score_Obsessions) as AvgObsessionScore,
+  AVG(Y_BOCS_Score_Compulsions) as AvgCompulsionScore
+FROM ocd_patient_dataset
+GROUP BY Ethnicity;
+
+--or
+
+SELECT
+  Ethnicity,
+  Gender,
+  COUNT(*) as Total,
+  AVG(Y_BOCS_Score_Obsessions) as AvgObsessionScore,
+  AVG(Y_BOCS_Score_Compulsions) as AvgCompulsionScore
+FROM ocd_patient_dataset
+GROUP BY Ethnicity,Gender
+ORDER BY Ethnicity
+
+--month-yearly ocd diagnosis
+SELECT
+  YEAR(New_Diagnosis_Date) as Year,
+  MONTH(New_Diagnosis_Date) as Month,
+  COUNT(*) as TotalDiagnoses
+FROM ocd_patient_dataset
+WHERE New_Diagnosis_Date IS NOT NULL
+GROUP BY YEAR(New_Diagnosis_Date), MONTH(New_Diagnosis_Date)
+ORDER BY Year, Month;
+
+--or
+
+SELECT
+  YEAR(OCD_Diagnosis_Date) as Year,
+  DATENAME(MONTH, OCD_Diagnosis_Date) as Month,
+  COUNT(*) as TotalDiagnoses
+FROM ocd_patient_dataset
+WHERE OCD_Diagnosis_Date IS NOT NULL
+GROUP BY YEAR(OCD_Diagnosis_Date), DATENAME(MONTH, OCD_Diagnosis_Date)
+ORDER BY Year, Month;
+
+--COUNT AND AVERAGE OF EACH COMPULSION AND OBSESSION TYPES
+SELECT
+  Obsession_Type,
+  COUNT(*) as TotalCount,
+  AVG(Y_BOCS_Score_Obsessions) as AvgObsessionScore
+FROM ocd_patient_dataset
+WHERE OCD_Diagnosis_Date IS NOT NULL
+GROUP BY Obsession_Type;
+
+SELECT
+  Compulsion_Type,
+  COUNT(*) as TotalCount,
+  AVG(Y_BOCS_Score_Compulsions) as AvgcompulsionScore
+FROM ocd_patient_dataset
+WHERE OCD_Diagnosis_Date IS NOT NULL
+GROUP BY Compulsion_Type;
